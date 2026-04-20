@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}{{ memory['title'] }} - Memory QR{% endblock %}
+
+{% block extra_css %}
+<style>
+.memory-page {
+    padding: 40px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.memory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.memory-title-section h1 {
+    font-size: 36px;
+    color: #1a1a2e;
+    margin: 0 0 12px 0;
+}
+
+.memory-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.memory-id-badge {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.memory-date {
+    color: #888;
+    font-size: 14px;
+}
+
+.memory-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 40px;
+}
+
+@media (max-width: 800px) {
+    .memory-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.memory-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.content-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.content-text:empty::before {
+    content: "暂无文字内容";
+    color: #aaa;
+    font-style: italic;
+}
+
+.media-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.media-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+}
+
+.media-container {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.media-container img {
+    max-width: 100%;
+    max-height: 500px;
+    display: block;
+}
+
+.media-container video {
+    max-width: 100%;
+    max-height: 500px;
+}
+
+.no-media {
+    padding: 60px 20px;
+    text-align: center;
+    color: #999;
+}
+
+.no-media-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.qr-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    position: sticky;
+    top: 100px;
+}
+
+.qr-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 20px;
+}
+
+.qr-image-container {
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.qr-image-container img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+}
+
+.qr-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-btn {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    border: none;
+    font-size: 14px;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 2px solid #e0e0e0;
+}
+
+.action-btn.secondary:hover {
+    background: #e8e8e8;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 24px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.back-link:hover {
+    background: #f0f4ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="memory-page">
+    <a href="{{ url_for('dashboard') }}" class="back-link">
+        ← 返回我的记忆
+    </a>
+    
+    <div class="memory-header">
+        <div class="memory-title-section">
+            <h1>{{ memory['title'] }}</h1>
+            <div class="memory-meta">
+                <span class="memory-id-badge">ID: {{ memory['memory_id'] }}</span>
+                <span class="memory-date">创建于 {{ memory['created_at'] }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="memory-content-grid">
+        <div class="memory-content">
+            <div class="content-text">{{ memory['content'] or '' }}</div>
+            
+            {% if memory['media_path'] %}
+                <div class="media-section">
+                    <h3 class="media-title">
+                        {% if memory['media_type'] == 'image' %}
+                            🖼️ 图片
+                        {% elif memory['media_type'] == 'video' %}
+                            🎬 视频
+                        {% endif %}
+                    </h3>
+                    <div class="media-container">
+                        {% if memory['media_type'] == 'image' %}
+                            <img src="{{ url_for('serve_upload', filename=memory['media_path'].replace('uploads/', '')) }}" alt="记忆图片">
+                        {% elif memory['media_type'] == 'video' %}
+                            <video controls>
+                                <source src="{{ url_for('serve_upload', filename=memory['media_path'].replace('uploads/', '')) }}" type="video/mp4">
+                                您的浏览器不支持视频播放
+                            </video>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="qr-sidebar">
+            <div class="qr-section">
+                <h3 class="qr-section-title">记忆二维码</h3>
+                <div class="qr-image-container">
+                    {% if memory['qr_path'] %}
+                        <img src="{{ url_for('serve_upload', filename=memory['qr_path'].replace('uploads/', '')) }}" alt="记忆二维码">
+                    {% else %}
+                        <div style="font-size: 48px; opacity: 0.5;">📱</div>
+                    {% endif %}
+                </div>
+                <div class="qr-actions">
+                    {% if memory['qr_path'] %}
+                        <a href="{{ url_for('serve_upload', filename=memory['qr_path'].replace('uploads/', '')) }}" 
+                           class="action-btn primary" download="memory_{{ memory['memory_id'] }}.png">
+                            📥 下载二维码
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('create_memory') }}" class="action-btn secondary">
+                        ✨ 创建新记忆
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}解码 - Memory QR{% endblock %}
+
+{% block extra_css %}
+<style>
+.decode-page {
+    padding: 40px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-header h1 {
+    font-size: 36px;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.decode-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.upload-section {
+    text-align: center;
+}
+
+.upload-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 24px;
+}
+
+.file-upload-area {
+    border: 3px dashed #d0d0d0;
+    border-radius: 16px;
+    padding: 60px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.file-upload-area:hover,
+.file-upload-area.dragover {
+    border-color: #667eea;
+    background: #f0f4ff;
+    transform: scale(1.02);
+}
+
+.file-upload-area input[type="file"] {
+    display: none;
+}
+
+.upload-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.upload-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.upload-hint {
+    color: #999;
+    font-size: 14px;
+}
+
+.preview-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #f0f0f0;
+    display: none;
+}
+
+.preview-section.show {
+    display: block;
+}
+
+.preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.preview-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.preview-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.decode-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.decode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.decode-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.login-prompt {
+    background: linear-gradient(135deg, #fff5e6 0%, #fff0d6 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 24px;
+    border: 2px solid #ffd993;
+}
+
+.login-prompt h3 {
+    color: #856404;
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+.login-prompt p {
+    color: #856404;
+    margin-bottom: 16px;
+}
+
+.login-prompt .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.login-prompt .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.login-prompt .btn-primary {
+    background: #856404;
+    color: white;
+}
+
+.login-prompt .btn-secondary {
+    background: white;
+    color: #856404;
+    border: 2px solid #ffd993;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="decode-page">
+    <div class="page-header">
+        <h1>🔍 解码记忆</h1>
+        <p>上传二维码图片，解锁隐藏的珍贵记忆</p>
+    </div>
+    
+    <div class="decode-card">
+        {% if not session.get('user_id') %}
+            <div class="login-prompt">
+                <h3>⚠️ 需要登录</h3>
+                <p>为了保护您的隐私安全，解码和查看记忆内容需要登录账户。</p>
+                <p>未登录用户只能检测二维码，无法解锁记忆内容。</p>
+                <div class="actions">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">立即登录</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-secondary">注册账户</a>
+                </div>
+            </div>
+        {% endif %}
+        
+        <form id="decodeForm" method="POST" enctype="multipart/form-data">
+            <div class="upload-section">
+                <h2 class="upload-title">上传二维码图片</h2>
+                <div class="file-upload-area" id="uploadArea">
+                    <input type="file" id="qr_image" name="qr_image" accept="image/*" required>
+                    <span class="upload-icon">📷</span>
+                    <div class="upload-text">点击或拖拽上传二维码图片</div>
+                    <div class="upload-hint">支持 PNG、JPG、GIF、BMP 等格式</div>
+                </div>
+            </div>
+            
+            <div class="preview-section" id="previewSection">
+                <h3 class="preview-title">图片预览</h3>
+                <div class="preview-container">
+                    <img id="previewImage" class="preview-image" alt="预览">
+                    <button type="submit" class="decode-btn" id="decodeBtn">
+                        开始解码
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('qr_image');
+const previewSection = document.getElementById('previewSection');
+const previewImage = document.getElementById('previewImage');
+
+// 点击上传区域
+uploadArea.addEventListener('click', () => {
+    fileInput.click();
+});
+
+// 文件选择处理
+fileInput.addEventListener('change', handleFileSelect);
+
+// 拖拽效果
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect({ target: fileInput });
+    }
+});
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // 检查是否为图片
+    if (!file.type.startsWith('image/')) {
+        alert('请上传有效的图片文件');
+        return;
+    }
+    
+    // 显示预览
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        previewImage.src = event.target.result;
+        previewSection.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+{% endblock %}

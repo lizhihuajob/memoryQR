@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}概念 - Memory QR{% endblock %}
+
+{% block extra_css %}
+<style>
+.concepts-page {
+    padding: 40px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.page-header h1 {
+    font-size: 36px;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.intro-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 48px;
+    color: white;
+}
+
+.intro-section h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.intro-section p {
+    font-size: 16px;
+    line-height: 1.8;
+    opacity: 0.95;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.feature-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.feature-icon {
+    font-size: 48px;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0f4ff 0%, #f8f0ff 100%);
+    border-radius: 16px;
+}
+
+.feature-title-section {
+    flex: 1;
+}
+
+.feature-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.feature-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.feature-status.dev {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.feature-status.plan {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.feature-status.concept {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.feature-description {
+    color: #666;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.timeline-section {
+    margin-top: 48px;
+    text-align: center;
+}
+
+.timeline-section h2 {
+    font-size: 24px;
+    color: #1a1a2e;
+    margin-bottom: 24px;
+}
+
+.timeline {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.timeline-item {
+    text-align: center;
+    max-width: 200px;
+}
+
+.timeline-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.timeline-dot.past {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.timeline-dot.current {
+    background: white;
+    border: 3px solid #667eea;
+    color: #667eea;
+}
+
+.timeline-dot.future {
+    background: #f5f5f5;
+    color: #aaa;
+}
+
+.timeline-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.timeline-desc {
+    font-size: 12px;
+    color: #888;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="concepts-page">
+    <div class="page-header">
+        <h1>🚀 未来概念</h1>
+        <p>探索记忆二维码的无限可能</p>
+    </div>
+    
+    <div class="intro-section">
+        <h2>我们的愿景</h2>
+        <p>
+            Memory QR 不仅仅是一个二维码生成工具，更是连接过去与未来的桥梁。
+            我们相信，每一个记忆都值得被珍视，每一个瞬间都值得被永久保存。
+            通过不断创新，我们正在打造一个完整的记忆生态系统，让你的故事永不褪色。
+        </p>
+    </div>
+    
+    <div class="features-grid">
+        {% for feature in features %}
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">{{ feature.icon }}</div>
+                    <div class="feature-title-section">
+                        <h3 class="feature-title">{{ feature.title }}</h3>
+                        <span class="feature-status {% if feature.status == '开发中' %}dev{% elif feature.status == '规划中' %}plan{% else %}concept{% endif %}">
+                            {{ feature.status }}
+                        </span>
+                    </div>
+                </div>
+                <p class="feature-description">{{ feature.description }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="timeline-section">
+        <h2>发展路线</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot past">✓</div>
+                <div class="timeline-label">基础功能</div>
+                <div class="timeline-desc">二维码生成、解码</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot current">1</div>
+                <div class="timeline-label">个性化设计</div>
+                <div class="timeline-desc">颜色、背景、Logo</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot future">2</div>
+                <div class="timeline-label">时光胶囊</div>
+                <div class="timeline-desc">定时解锁功能</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot future">3</div>
+                <div class="timeline-label">多人共享</div>
+                <div class="timeline-desc">协作记忆空间</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

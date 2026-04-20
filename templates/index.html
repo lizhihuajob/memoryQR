@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Memory QR - 记忆二维码{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                <span class="highlight">记忆</span>二维码
+            </h1>
+            <p class="hero-subtitle">
+                将珍贵的记忆编码成独特的二维码，解锁时光的秘密
+            </p>
+            <p class="hero-description">
+                每一个二维码都是通往私密记忆的钥匙。只有你，才能解锁那些美好的瞬间。
+                定制专属样式，嵌入 Logo 或背景图，让你的记忆更加独特。
+            </p>
+            <div class="hero-actions">
+                {% if not session.get('user_id') %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                        开始创建
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-secondary btn-lg">
+                        登录查看
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('create_memory') }}" class="btn btn-primary btn-lg">
+                        创建新记忆
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+                        我的记忆
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="qr-preview-card">
+                <div class="qr-placeholder">
+                    <div class="qr-pattern">
+                        <div class="qr-corner top-left"></div>
+                        <div class="qr-corner top-right"></div>
+                        <div class="qr-corner bottom-left"></div>
+                        <div class="qr-dots"></div>
+                    </div>
+                </div>
+                <p class="qr-caption">扫描解锁记忆</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">核心功能</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>双重加密保护</h3>
+                <p>未登录用户无法解码和查看记忆内容，确保你的私密记忆绝对安全。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>个性化定制</h3>
+                <p>自定义二维码颜色、背景图、Logo 嵌入，让每个二维码都独一无二。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📸</div>
+                <h3>多媒体支持</h3>
+                <p>支持文字、图片、视频等多种格式，完整保存你的珍贵记忆。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>智能解码</h3>
+                <p>上传二维码图片，系统自动识别并校验权限，即时展示记忆内容。</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="container">
+        <h2 class="section-title">如何使用</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>创建账户</h3>
+                <p>注册并登录，开始你的记忆之旅</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>添加记忆</h3>
+                <p>输入标题、文字，上传图片或视频</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>定制样式</h3>
+                <p>选择颜色、背景图、Logo，实时预览</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>生成二维码</h3>
+                <p>保存并分享你的专属记忆钥匙</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>准备好保存你的记忆了吗？</h2>
+            <p>立即开始创建你的第一个记忆二维码</p>
+            {% if not session.get('user_id') %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">免费注册</a>
+            {% else %}
+                <a href="{{ url_for('create_memory') }}" class="btn btn-primary btn-lg">创建记忆</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
