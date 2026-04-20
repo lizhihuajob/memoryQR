@@ -87,6 +87,10 @@
     resize: vertical;
 }
 
+.file-upload-wrapper {
+    position: relative;
+}
+
 .file-upload-area {
     border: 2px dashed #d0d0d0;
     border-radius: 12px;
@@ -101,6 +105,12 @@
 .file-upload-area.dragover {
     border-color: #667eea;
     background: #f0f4ff;
+}
+
+.file-upload-area.has-file {
+    padding: 16px;
+    border-style: solid;
+    background: #f8f9fa;
 }
 
 .file-upload-area input[type="file"] {
@@ -122,6 +132,71 @@
     color: #999;
     font-size: 12px;
     margin-top: 8px;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+}
+
+.file-preview-thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.file-preview-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.file-preview-thumbnail .icon {
+    font-size: 32px;
+}
+
+.file-preview-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-preview-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-preview-size {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.file-remove-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #aaa;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.file-remove-btn:hover {
+    color: #dc3545;
+    transform: scale(1.1);
 }
 
 .color-picker-row {
@@ -233,6 +308,62 @@
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
+
+.upload-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #e3f2fd;
+    color: #1976d2;
+    font-size: 11px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.upload-type-badge.image {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.upload-type-badge.video {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.media-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.media-tab {
+    padding: 8px 16px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.media-tab:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.media-tab.active {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
 </style>
 {% endblock %}
 
@@ -257,11 +388,33 @@
                 
                 <div class="form-group">
                     <label>媒体文件（图片/视频）</label>
-                    <div class="file-upload-area" onclick="document.getElementById('media').click()">
-                        <input type="file" id="media" name="media" accept="image/*,video/*">
-                        <div class="upload-icon">📁</div>
-                        <div class="upload-text">点击或拖拽上传图片或视频</div>
-                        <div class="upload-hint">支持 JPG, PNG, GIF, MP4, WebM 等格式</div>
+                    
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" id="mediaUploadArea" onclick="document.getElementById('media').click()">
+                            <input type="file" id="media" name="media" accept="image/*,video/*">
+                            <div class="upload-icon">📁</div>
+                            <div class="upload-text">点击或拖拽上传图片或视频</div>
+                            <div class="upload-hint">支持 JPG, PNG, GIF, MP4, WebM 等格式</div>
+                        </div>
+                        
+                        <div id="mediaPreview" style="display: none;">
+                            <div class="file-upload-area has-file">
+                                <div class="file-preview">
+                                    <div class="file-preview-thumbnail">
+                                        <img id="mediaThumbnail" src="" alt="预览" style="display: none;">
+                                        <span class="icon" id="mediaIcon">📁</span>
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="mediaFileName">未选择文件</div>
+                                        <div class="file-preview-size">
+                                            <span class="upload-type-badge" id="mediaTypeBadge"></span>
+                                            <span id="mediaFileSize"></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" onclick="removeMedia()">&times;</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -286,21 +439,63 @@
                 
                 <div class="form-group">
                     <label>Logo（可选）</label>
-                    <div class="file-upload-area" onclick="document.getElementById('logo').click()">
-                        <input type="file" id="logo" name="logo" accept="image/*">
-                        <div class="upload-icon">🏷️</div>
-                        <div class="upload-text">上传 Logo 图片</div>
-                        <div class="upload-hint">将显示在二维码中心</div>
+                    
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" id="logoUploadArea" onclick="document.getElementById('logo').click()">
+                            <input type="file" id="logo" name="logo" accept="image/*">
+                            <div class="upload-icon">🏷️</div>
+                            <div class="upload-text">上传 Logo 图片</div>
+                            <div class="upload-hint">将显示在二维码中心</div>
+                        </div>
+                        
+                        <div id="logoPreview" style="display: none;">
+                            <div class="file-upload-area has-file">
+                                <div class="file-preview">
+                                    <div class="file-preview-thumbnail">
+                                        <img id="logoThumbnail" src="" alt="Logo预览">
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="logoFileName">未选择文件</div>
+                                        <div class="file-preview-size">
+                                            <span class="upload-type-badge image">图片</span>
+                                            <span id="logoFileSize"></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" onclick="removeLogo()">&times;</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>背景图片（可选）</label>
-                    <div class="file-upload-area" onclick="document.getElementById('background').click()">
-                        <input type="file" id="background" name="background" accept="image/*">
-                        <div class="upload-icon">🖼️</div>
-                        <div class="upload-text">上传背景图片</div>
-                        <div class="upload-hint">二维码将叠加在背景图上</div>
+                    
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" id="bgUploadArea" onclick="document.getElementById('background').click()">
+                            <input type="file" id="background" name="background" accept="image/*">
+                            <div class="upload-icon">🖼️</div>
+                            <div class="upload-text">上传背景图片</div>
+                            <div class="upload-hint">二维码将叠加在背景图上</div>
+                        </div>
+                        
+                        <div id="bgPreview" style="display: none;">
+                            <div class="file-upload-area has-file">
+                                <div class="file-preview">
+                                    <div class="file-preview-thumbnail">
+                                        <img id="bgThumbnail" src="" alt="背景预览">
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="bgFileName">未选择文件</div>
+                                        <div class="file-preview-size">
+                                            <span class="upload-type-badge image">图片</span>
+                                            <span id="bgFileSize"></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" onclick="removeBackground()">&times;</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -354,7 +549,136 @@
 
 {% block extra_js %}
 <script>
-// 颜色选择器同步
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function getFileExtension(filename) {
+    return filename.split('.').pop().toLowerCase();
+}
+
+function isImageFile(filename) {
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    return imageExts.includes(getFileExtension(filename));
+}
+
+function isVideoFile(filename) {
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+    return videoExts.includes(getFileExtension(filename));
+}
+
+function setupFileUpload(inputId, uploadAreaId, previewId, thumbnailId, fileNameId, fileSizeId, typeBadgeId, isMedia) {
+    const input = document.getElementById(inputId);
+    const uploadArea = document.getElementById(uploadAreaId);
+    const preview = document.getElementById(previewId);
+    const thumbnail = document.getElementById(thumbnailId);
+    const fileName = document.getElementById(fileNameId);
+    const fileSize = document.getElementById(fileSizeId);
+    const typeBadge = typeBadgeId ? document.getElementById(typeBadgeId) : null;
+    
+    input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        if (typeBadge) {
+            if (isImageFile(file.name)) {
+                typeBadge.textContent = '图片';
+                typeBadge.className = 'upload-type-badge image';
+            } else if (isVideoFile(file.name)) {
+                typeBadge.textContent = '视频';
+                typeBadge.className = 'upload-type-badge video';
+            }
+        }
+        
+        if (isImageFile(file.name) && thumbnail) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                thumbnail.src = event.target.result;
+                thumbnail.style.display = 'block';
+                if (document.getElementById('mediaIcon')) {
+                    document.getElementById('mediaIcon').style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        } else if (thumbnail) {
+            thumbnail.style.display = 'none';
+            if (document.getElementById('mediaIcon')) {
+                document.getElementById('mediaIcon').style.display = 'block';
+                document.getElementById('mediaIcon').textContent = isVideoFile(file.name) ? '🎬' : '📁';
+            }
+        }
+        
+        uploadArea.style.display = 'none';
+        preview.style.display = 'block';
+    });
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+function removeMedia() {
+    const input = document.getElementById('media');
+    const uploadArea = document.getElementById('mediaUploadArea');
+    const preview = document.getElementById('mediaPreview');
+    const thumbnail = document.getElementById('mediaThumbnail');
+    const icon = document.getElementById('mediaIcon');
+    
+    input.value = '';
+    thumbnail.src = '';
+    thumbnail.style.display = 'none';
+    icon.style.display = 'block';
+    
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+}
+
+function removeLogo() {
+    const input = document.getElementById('logo');
+    const uploadArea = document.getElementById('logoUploadArea');
+    const preview = document.getElementById('logoPreview');
+    
+    input.value = '';
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+}
+
+function removeBackground() {
+    const input = document.getElementById('background');
+    const uploadArea = document.getElementById('bgUploadArea');
+    const preview = document.getElementById('bgPreview');
+    
+    input.value = '';
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+}
+
+setupFileUpload('media', 'mediaUploadArea', 'mediaPreview', 'mediaThumbnail', 'mediaFileName', 'mediaFileSize', 'mediaTypeBadge', true);
+setupFileUpload('logo', 'logoUploadArea', 'logoPreview', 'logoThumbnail', 'logoFileName', 'logoFileSize', null, false);
+setupFileUpload('background', 'bgUploadArea', 'bgPreview', 'bgThumbnail', 'bgFileName', 'bgFileSize', null, false);
+
 document.getElementById('fg_color').addEventListener('input', function(e) {
     document.getElementById('fg_color_text').value = e.target.value;
     debouncedUpdatePreview();
@@ -389,7 +713,6 @@ document.getElementById('bg_color_text').addEventListener('input', function(e) {
 
 document.getElementById('error_correction').addEventListener('change', debouncedUpdatePreview);
 
-// 防抖函数
 let previewTimeout;
 function debouncedUpdatePreview() {
     clearTimeout(previewTimeout);
@@ -428,30 +751,6 @@ async function updatePreview() {
     }
 }
 
-// 文件拖拽效果
-const uploadAreas = document.querySelectorAll('.file-upload-area');
-uploadAreas.forEach(area => {
-    area.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        area.classList.add('dragover');
-    });
-    
-    area.addEventListener('dragleave', () => {
-        area.classList.remove('dragover');
-    });
-    
-    area.addEventListener('drop', (e) => {
-        e.preventDefault();
-        area.classList.remove('dragover');
-        
-        const input = area.querySelector('input[type="file"]');
-        if (input && e.dataTransfer.files.length > 0) {
-            input.files = e.dataTransfer.files;
-        }
-    });
-});
-
-// 初始预览
 updatePreview();
 </script>
 {% endblock %}
