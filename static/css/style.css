@@ -167,7 +167,7 @@ body {
 
 .dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 4px);
     right: 0;
     background: white;
     border-radius: var(--radius-md);
@@ -175,11 +175,21 @@ body {
     min-width: 180px;
     padding: 8px;
     display: none;
-    margin-top: 8px;
     z-index: 1001;
 }
 
-.nav-dropdown:hover .dropdown-menu {
+.nav-dropdown::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: 20px;
+    background: transparent;
+}
+
+.nav-dropdown:hover .dropdown-menu,
+.nav-dropdown.active .dropdown-menu {
     display: block;
 }
 

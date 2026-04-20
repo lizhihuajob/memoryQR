@@ -35,10 +35,11 @@
                             <span class="user-name">{{ session.get('username', '用户') }}</span>
                         </button>
                         <div class="dropdown-menu">
-                            <a href="{{ url_for('dashboard') }}" class="dropdown-item">我的记忆</a>
-                            <a href="{{ url_for('create_memory') }}" class="dropdown-item">创建记忆</a>
+                            <a href="{{ url_for('profile') }}" class="dropdown-item">👤 个人中心</a>
+                            <a href="{{ url_for('dashboard') }}" class="dropdown-item">📁 我的记忆</a>
+                            <a href="{{ url_for('create_memory') }}" class="dropdown-item">✨ 创建记忆</a>
                             <hr class="dropdown-divider">
-                            <a href="{{ url_for('logout') }}" class="dropdown-item logout">退出登录</a>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item logout">🚪 退出登录</a>
                         </div>
                     </div>
                 {% else %}

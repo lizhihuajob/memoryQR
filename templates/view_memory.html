@@ -244,10 +244,10 @@
                     </h3>
                     <div class="media-container">
                         {% if memory['media_type'] == 'image' %}
-                            <img src="{{ url_for('serve_upload', filename=memory['media_path'].replace('uploads/', '')) }}" alt="记忆图片">
+                            <img src="{{ url_for('serve_upload', filename=memory['media_path']|to_url) }}" alt="记忆图片">
                         {% elif memory['media_type'] == 'video' %}
                             <video controls>
-                                <source src="{{ url_for('serve_upload', filename=memory['media_path'].replace('uploads/', '')) }}" type="video/mp4">
+                                <source src="{{ url_for('serve_upload', filename=memory['media_path']|to_url) }}" type="video/mp4">
                                 您的浏览器不支持视频播放
                             </video>
                         {% endif %}
@@ -261,14 +261,14 @@
                 <h3 class="qr-section-title">记忆二维码</h3>
                 <div class="qr-image-container">
                     {% if memory['qr_path'] %}
-                        <img src="{{ url_for('serve_upload', filename=memory['qr_path'].replace('uploads/', '')) }}" alt="记忆二维码">
+                        <img src="{{ url_for('serve_upload', filename=memory['qr_path']|to_url) }}" alt="记忆二维码">
                     {% else %}
                         <div style="font-size: 48px; opacity: 0.5;">📱</div>
                     {% endif %}
                 </div>
                 <div class="qr-actions">
                     {% if memory['qr_path'] %}
-                        <a href="{{ url_for('serve_upload', filename=memory['qr_path'].replace('uploads/', '')) }}" 
+                        <a href="{{ url_for('serve_upload', filename=memory['qr_path']|to_url) }}" 
                            class="action-btn primary" download="memory_{{ memory['memory_id'] }}.png">
                             📥 下载二维码
                         </a>

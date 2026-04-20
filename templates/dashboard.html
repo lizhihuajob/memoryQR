@@ -142,7 +142,7 @@
                 <div class="memory-card" onclick="window.location.href='{{ url_for('view_memory', memory_id=memory['memory_id']) }}'">
                     <div class="memory-qr">
                         {% if memory['qr_path'] %}
-                            <img src="{{ url_for('serve_upload', filename=memory['qr_path'].replace('uploads/', '')) }}" alt="QR Code">
+                            <img src="{{ url_for('serve_upload', filename=memory['qr_path']|to_url) }}" alt="QR Code">
                         {% else %}
                             <div class="memory-qr-placeholder">📱</div>
                         {% endif %}

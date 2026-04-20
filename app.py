@@ -31,6 +31,24 @@ for folder in [UPLOAD_FOLDER, QR_FOLDER, MEMORY_FOLDER]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+def normalize_path(path):
+    if path:
+        return path.replace('\\', '/')
+    return path
+
+@app.template_filter('to_url')
+def to_url_filter(path):
+    if not path:
+        return ''
+    normalized = normalize_path(path)
+    if normalized.startswith('uploads/'):
+        return normalized[8:]
+    return normalized
+
+@app.template_filter('normalize_path')
+def normalize_path_filter(path):
+    return normalize_path(path)
+
 def get_db_connection():
     conn = sqlite3.connect('memory_qr.db')
     conn.row_factory = sqlite3.Row
@@ -46,6 +64,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            email TEXT,
+            avatar TEXT,
+            bio TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -96,82 +117,87 @@ def generate_qr_code(memory_id, options=None):
     if options is None:
         options = {}
     
-    # 默认配置
     fg_color = options.get('fg_color', '#000000')
     bg_color = options.get('bg_color', '#FFFFFF')
     logo_path = options.get('logo_path')
     background_img_path = options.get('background_img_path')
     error_correction = options.get('error_correction', 'H')
     
-    # 使用 segno 生成二维码
     qr = segno.make(memory_id, error=error_correction)
     
-    # 创建基本二维码图像
     temp_qr_path = os.path.join(QR_FOLDER, f'temp_{uuid.uuid4().hex}.png')
     qr.save(temp_qr_path, scale=10, border=4, dark=fg_color, light=bg_color)
     
-    # 打开生成的二维码
-    qr_img = Image.open(temp_qr_path).convert('RGBA')
+    qr_img = Image.open(temp_qr_path).convert('RGB')
     qr_width, qr_height = qr_img.size
     
-    # 处理背景图
     if background_img_path and os.path.exists(background_img_path):
         try:
-            bg_img = Image.open(background_img_path).convert('RGBA')
-            # 调整背景图大小以适应二维码
+            bg_img = Image.open(background_img_path).convert('RGB')
             bg_img = bg_img.resize((qr_width, qr_height), Image.Resampling.LANCZOS)
             
-            # 创建一个半透明的遮罩让二维码更清晰
-            overlay = Image.new('RGBA', (qr_width, qr_height), (255, 255, 255, 180))
-            bg_img = Image.alpha_composite(bg_img, overlay)
+            qr_data = qr_img.load()
+            bg_data = bg_img.load()
             
-            # 将二维码放在背景图上
-            qr_img = Image.alpha_composite(bg_img, qr_img)
+            for y in range(qr_height):
+                for x in range(qr_width):
+                    qr_r, qr_g, qr_b = qr_data[x, y]
+                    bg_r, bg_g, bg_b = bg_data[x, y]
+                    
+                    is_foreground = (qr_r, qr_g, qr_b) == hex_to_rgb(fg_color)
+                    
+                    if is_foreground:
+                        qr_data[x, y] = (qr_r, qr_g, qr_b)
+                    else:
+                        alpha = 0.7
+                        qr_data[x, y] = (
+                            int(bg_r * alpha + qr_r * (1 - alpha)),
+                            int(bg_g * alpha + qr_g * (1 - alpha)),
+                            int(bg_b * alpha + qr_b * (1 - alpha))
+                        )
         except Exception as e:
             print(f"背景图处理错误: {e}")
     
-    # 处理 Logo 嵌入
     if logo_path and os.path.exists(logo_path):
         try:
             logo = Image.open(logo_path).convert('RGBA')
-            # 计算 Logo 大小（二维码的 20%）
-            logo_size = int(qr_width * 0.2)
+            logo_size = int(qr_width * 0.15)
             logo = logo.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
             
-            # 计算位置（中心）
             logo_x = (qr_width - logo_size) // 2
             logo_y = (qr_height - logo_size) // 2
             
-            # 创建白色背景圆
-            draw = ImageDraw.Draw(qr_img)
-            circle_radius = int(logo_size * 0.6)
-            circle_x = logo_x + logo_size // 2
-            circle_y = logo_y + logo_size // 2
-            draw.ellipse(
-                [circle_x - circle_radius, circle_y - circle_radius,
-                 circle_x + circle_radius, circle_y + circle_radius],
-                fill=bg_color if bg_color != '#FFFFFF' else 'white'
-            )
+            white_bg = Image.new('RGB', (logo_size + 10, logo_size + 10), hex_to_rgb(bg_color) if bg_color else (255, 255, 255))
+            white_bg_x = logo_x - 5
+            white_bg_y = logo_y - 5
             
-            # 粘贴 Logo
-            qr_img.paste(logo, (logo_x, logo_y), logo)
+            qr_img.paste(white_bg, (white_bg_x, white_bg_y))
+            
+            logo_rgb = logo.convert('RGB')
+            logo_alpha = logo.split()[-1] if 'A' in logo.getbands() else None
+            
+            if logo_alpha:
+                qr_img.paste(logo_rgb, (logo_x, logo_y), logo_alpha)
+            else:
+                qr_img.paste(logo_rgb, (logo_x, logo_y))
         except Exception as e:
             print(f"Logo 处理错误: {e}")
     
-    # 保存最终二维码
     qr_filename = f'qr_{uuid.uuid4().hex}.png'
     qr_path = os.path.join(QR_FOLDER, qr_filename)
     
-    # 转换为 RGB 保存为 PNG
-    if qr_img.mode == 'RGBA':
-        qr_img = qr_img.convert('RGB')
     qr_img.save(qr_path, 'PNG')
     
-    # 删除临时文件
     if os.path.exists(temp_qr_path):
         os.remove(temp_qr_path)
     
     return qr_filename
+
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) == 3:
+        hex_color = ''.join(c * 2 for c in hex_color)
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
 def decode_qr_code(image_path):
     # 使用 OpenCV 解码二维码
@@ -283,6 +309,86 @@ def logout():
     session.clear()
     flash('已成功退出登录', 'info')
     return redirect(url_for('index'))
+
+@app.route('/profile')
+@login_required
+def profile():
+    conn = get_db_connection()
+    user = conn.execute(
+        'SELECT * FROM users WHERE id = ?',
+        (session['user_id'],)
+    ).fetchone()
+    
+    memories_count = conn.execute(
+        'SELECT COUNT(*) as count FROM memories WHERE user_id = ?',
+        (session['user_id'],)
+    ).fetchone()['count']
+    
+    conn.close()
+    return render_template('profile.html', user=user, memories_count=memories_count)
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    conn = get_db_connection()
+    user = conn.execute(
+        'SELECT * FROM users WHERE id = ?',
+        (session['user_id'],)
+    ).fetchone()
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        bio = request.form.get('bio', '').strip()
+        
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        if current_password and new_password:
+            if not check_password_hash(user['password'], current_password):
+                flash('当前密码不正确', 'danger')
+                conn.close()
+                return redirect(url_for('edit_profile'))
+            
+            if new_password != confirm_password:
+                flash('两次输入的新密码不一致', 'danger')
+                conn.close()
+                return redirect(url_for('edit_profile'))
+            
+            if len(new_password) < 6:
+                flash('新密码长度至少6位', 'danger')
+                conn.close()
+                return redirect(url_for('edit_profile'))
+            
+            hashed_password = generate_password_hash(new_password)
+            conn.execute(
+                'UPDATE users SET password = ? WHERE id = ?',
+                (hashed_password, session['user_id'])
+            )
+            flash('密码修改成功！', 'success')
+        
+        avatar_path = user['avatar']
+        if 'avatar' in request.files:
+            avatar_file = request.files['avatar']
+            if avatar_file and avatar_file.filename:
+                if get_file_type(avatar_file.filename) == 'image':
+                    filename = secure_filename(avatar_file.filename)
+                    unique_filename = f'avatar_{session["user_id"]}_{uuid.uuid4().hex}_{filename}'
+                    avatar_path = os.path.join(MEMORY_FOLDER, unique_filename)
+                    avatar_file.save(avatar_path)
+        
+        conn.execute(
+            'UPDATE users SET email = ?, bio = ?, avatar = ? WHERE id = ?',
+            (email, bio, avatar_path, session['user_id'])
+        )
+        conn.commit()
+        conn.close()
+        
+        flash('个人信息更新成功！', 'success')
+        return redirect(url_for('profile'))
+    
+    conn.close()
+    return render_template('edit_profile.html', user=user)
 
 @app.route('/dashboard')
 @login_required
