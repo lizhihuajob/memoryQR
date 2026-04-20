@@ -19,8 +19,8 @@ app.secret_key = 'memory_qr_secret_key_2024'
 UPLOAD_FOLDER = 'uploads'
 QR_FOLDER = 'uploads/qrcodes'
 MEMORY_FOLDER = 'uploads/memories'
-ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'wmv'}
 ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS.union(ALLOWED_VIDEO_EXTENSIONS)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
