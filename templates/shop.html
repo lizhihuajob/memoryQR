@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}商城 - Memory QR{% endblock %}
+
+{% block extra_css %}
+<style>
+.shop-page {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.page-header h1 {
+    font-size: 36px;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 48px;
+    color: white;
+    text-align: center;
+}
+
+.banner h2 {
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.banner p {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+    height: 200px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+}
+
+.product-info {
+    padding: 24px;
+}
+
+.product-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.product-description {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.product-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.product-price {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.product-btn {
+    padding: 10px 20px;
+    background: #f5f5f5;
+    color: #666;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.product-btn:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.coming-soon-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #ff6b6b;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.static-notice {
+    text-align: center;
+    margin-top: 48px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    color: #666;
+}
+
+.static-notice p {
+    margin: 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-page">
+    <div class="page-header">
+        <h1>🛍️ 周边商城</h1>
+        <p>精选记忆二维码周边产品，让记忆更加真实可触</p>
+    </div>
+    
+    <div class="banner">
+        <h2>即将上线</h2>
+        <p>我们正在精心准备各种周边产品，敬请期待！</p>
+    </div>
+    
+    <div class="products-grid">
+        {% for product in products %}
+            <div class="product-card" style="position: relative;">
+                <div class="coming-soon-badge">即将上线</div>
+                <div class="product-image">
+                    {% if product.image == 'sticker_pack' %}📦
+                    {% elif product.image == 'photo_frame' %}🖼️
+                    {% elif product.image == 'gift_box' %}🎁
+                    {% elif product.image == 'print_service' %}🖨️
+                    {% else %}📦{% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.description }}</p>
+                    <div class="product-footer">
+                        <span class="product-price">{{ product.price }}</span>
+                        <button class="product-btn" disabled>预约通知</button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="static-notice">
+        <p>ℹ️ 此页面为静态展示页面，实际购买功能即将开放</p>
+    </div>
+</div>
+{% endblock %}

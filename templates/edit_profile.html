@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}编辑资料 - Memory QR{% endblock %}
+
+{% block extra_css %}
+<style>
+.edit-profile-page {
+    padding: 40px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-header h1 {
+    font-size: 32px;
+    color: #1a1a2e;
+    margin: 0 0 8px 0;
+}
+
+.page-header p {
+    color: #888;
+    font-size: 14px;
+}
+
+.edit-form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.form-section {
+    margin-bottom: 32px;
+}
+
+.form-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #888;
+    margin-top: 6px;
+}
+
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-info {
+    flex: 1;
+}
+
+.avatar-upload-area {
+    border: 2px dashed #d0d0d0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.avatar-upload-area:hover,
+.avatar-upload-area.dragover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.avatar-upload-area input[type="file"] {
+    display: none;
+}
+
+.avatar-upload-text {
+    color: #666;
+    font-size: 14px;
+}
+
+.avatar-upload-hint {
+    color: #999;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.avatar-preview-wrapper {
+    margin-bottom: 16px;
+    display: none;
+}
+
+.avatar-preview-wrapper.show {
+    display: block;
+}
+
+.avatar-preview-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e0e0e0;
+}
+
+.password-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.password-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.password-hint {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 16px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.btn-primary {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    padding: 14px 32px;
+    background: white;
+    color: #666;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-secondary:hover {
+    background: #f5f5f5;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 24px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.back-link:hover {
+    background: #f0f4ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-profile-page">
+    <a href="{{ url_for('profile') }}" class="back-link">
+        ← 返回个人中心
+    </a>
+    
+    <div class="page-header">
+        <h1>编辑个人资料</h1>
+        <p>修改您的个人信息和设置</p>
+    </div>
+    
+    <div class="edit-form-card">
+        <form id="editProfileForm" method="POST" enctype="multipart/form-data">
+            
+            <div class="form-section">
+                <h2 class="form-section-title">基本信息</h2>
+                
+                <div class="form-group">
+                    <label>头像</label>
+                    <div class="avatar-section">
+                        <div class="avatar-preview">
+                            {% if user['avatar'] %}
+                                <img src="{{ url_for('serve_upload', filename=user['avatar']|to_url) }}" alt="头像">
+                            {% else %}
+                                {{ user['username'][0].upper() }}
+                            {% endif %}
+                        </div>
+                        <div class="avatar-info">
+                            <div class="avatar-preview-wrapper" id="newAvatarPreview">
+                                <img id="newAvatarImg" class="avatar-preview-img" src="" alt="新头像预览">
+                            </div>
+                            <div class="avatar-upload-area" onclick="document.getElementById('avatar').click()">
+                                <input type="file" id="avatar" name="avatar" accept="image/*">
+                                <div class="avatar-upload-text">📷 点击或拖拽上传新头像</div>
+                                <div class="avatar-upload-hint">支持 JPG, PNG, GIF 格式，建议正方形图片</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" name="email" placeholder="请输入邮箱地址" value="{{ user['email'] or '' }}">
+                    <p class="form-hint">用于找回密码和接收通知</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bio">个人简介</label>
+                    <textarea id="bio" name="bio" placeholder="介绍一下自己...">{{ user['bio'] or '' }}</textarea>
+                    <p class="form-hint">最多 200 字</p>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="password-section">
+                    <h2 class="password-section-title">
+                        🔐 修改密码
+                        <span style="font-weight: normal; font-size: 12px; color: #888;">（留空则不修改）</span>
+                    </h2>
+                    <p class="password-hint">如果需要修改密码，请先输入当前密码，然后输入新密码</p>
+                    
+                    <div class="form-group">
+                        <label for="current_password">当前密码</label>
+                        <input type="password" id="current_password" name="current_password" placeholder="请输入当前密码">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new_password">新密码</label>
+                        <input type="password" id="new_password" name="new_password" placeholder="请输入新密码（至少6位）">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">确认新密码</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="请再次输入新密码">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    💾 保存修改
+                </button>
+                <a href="{{ url_for('profile') }}" class="btn-secondary">
+                    取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const avatarInput = document.getElementById('avatar');
+const avatarPreview = document.getElementById('newAvatarPreview');
+const avatarImg = document.getElementById('newAvatarImg');
+const uploadArea = avatarInput ? avatarInput.closest('.avatar-upload-area') : null;
+
+if (avatarInput) {
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                avatarImg.src = event.target.result;
+                avatarPreview.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (uploadArea) {
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].type.startsWith('image/')) {
+            avatarInput.files = e.dataTransfer.files;
+            avatarInput.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+const form = document.getElementById('editProfileForm');
+if (form) {
+    form.addEventListener('submit', function(e) {
+        const currentPassword = document.getElementById('current_password').value;
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (currentPassword || newPassword || confirmPassword) {
+            if (!currentPassword) {
+                alert('请输入当前密码');
+                e.preventDefault();
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                alert('新密码长度至少6位');
+                e.preventDefault();
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('两次输入的新密码不一致');
+                e.preventDefault();
+                return;
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

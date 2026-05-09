@@ -1,0 +1,895 @@
+{% extends "base.html" %}
+
+{% block title %}创建记忆 - Memory QR{% endblock %}
+
+{% block extra_css %}
+<style>
+.create-page {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.create-container {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 40px;
+}
+
+@media (max-width: 900px) {
+    .create-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.preview-section {
+    position: sticky;
+    top: 100px;
+}
+
+.preview-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.file-upload-wrapper {
+    position: relative;
+}
+
+.file-upload-area {
+    border: 2px dashed #d0d0d0;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.file-upload-area:hover,
+.file-upload-area.dragover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.file-upload-area.has-file {
+    padding: 16px;
+    border-style: solid;
+    background: #f8f9fa;
+}
+
+.file-upload-area input[type="file"] {
+    display: none;
+}
+
+.upload-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.upload-text {
+    color: #666;
+    font-size: 14px;
+}
+
+.upload-hint {
+    color: #999;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+}
+
+.file-preview-thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.file-preview-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.file-preview-thumbnail .icon {
+    font-size: 32px;
+}
+
+.file-preview-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-preview-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-preview-size {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.file-remove-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #aaa;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.file-remove-btn:hover {
+    color: #dc3545;
+    transform: scale(1.1);
+}
+
+.color-picker-row {
+    display: flex;
+    gap: 24px;
+}
+
+.color-picker-group {
+    flex: 1;
+}
+
+.color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-input-wrapper input[type="color"] {
+    width: 60px;
+    height: 50px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.color-input-wrapper input[type="text"] {
+    flex: 1;
+}
+
+.preview-qr-container {
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-qr-container img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preview-placeholder {
+    width: 200px;
+    height: 200px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+}
+
+.preview-placeholder .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.preview-info {
+    font-size: 13px;
+    color: #666;
+    margin-top: 16px;
+}
+
+.submit-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #f0f0f0;
+    display: flex;
+    gap: 16px;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 15px;
+    background: white;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+.select-wrapper select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.upload-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #e3f2fd;
+    color: #1976d2;
+    font-size: 11px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.upload-type-badge.image {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.upload-type-badge.video {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.media-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.media-tab {
+    padding: 8px 16px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.media-tab:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.media-tab.active {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-page">
+    <h1 style="font-size: 32px; color: #1a1a2e; margin-bottom: 32px;">创建新记忆</h1>
+    
+    <div class="create-container">
+        <div class="form-section">
+            <form id="memoryForm" method="POST" enctype="multipart/form-data">
+                <h2 class="section-title">记忆内容</h2>
+                
+                <div class="form-group">
+                    <label for="title">标题 *</label>
+                    <input type="text" id="title" name="title" placeholder="给这个记忆起个名字" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">文字内容</label>
+                    <textarea id="content" name="content" placeholder="写下你想保存的文字..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>媒体文件（图片/视频）</label>
+                    
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" id="mediaUploadArea" onclick="document.getElementById('media').click()">
+                            <input type="file" id="media" name="media" accept="image/*,video/*">
+                            <div class="upload-icon">📁</div>
+                            <div class="upload-text">点击或拖拽上传图片或视频</div>
+                            <div class="upload-hint">支持 JPG, PNG, GIF, MP4, WebM, MOV 等格式，单文件最大 50MB</div>
+                        </div>
+                        
+                        <div id="mediaPreview" style="display: none;">
+                            <div class="file-upload-area has-file">
+                                <div class="file-preview">
+                                    <div class="file-preview-thumbnail">
+                                        <img id="mediaThumbnail" src="" alt="预览" style="display: none;">
+                                        <span class="icon" id="mediaIcon">📁</span>
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="mediaFileName">未选择文件</div>
+                                        <div class="file-preview-size">
+                                            <span class="upload-type-badge" id="mediaTypeBadge"></span>
+                                            <span id="mediaFileSize"></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" onclick="removeMedia()">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 class="section-title" style="margin-top: 40px;">二维码设计</h2>
+                
+                <div class="color-picker-row">
+                    <div class="form-group color-picker-group">
+                        <label>前景色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="fg_color" name="fg_color" value="#000000">
+                            <input type="text" id="fg_color_text" value="#000000" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="form-group color-picker-group">
+                        <label>背景色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="bg_color" name="bg_color" value="#FFFFFF">
+                            <input type="text" id="bg_color_text" value="#FFFFFF" maxlength="7">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Logo（可选）</label>
+                    
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" id="logoUploadArea" onclick="document.getElementById('logo').click()">
+                            <input type="file" id="logo" name="logo" accept="image/*">
+                            <div class="upload-icon">🏷️</div>
+                            <div class="upload-text">上传 Logo 图片</div>
+                            <div class="upload-hint">将显示在二维码中心</div>
+                        </div>
+                        
+                        <div id="logoPreview" style="display: none;">
+                            <div class="file-upload-area has-file">
+                                <div class="file-preview">
+                                    <div class="file-preview-thumbnail">
+                                        <img id="logoThumbnail" src="" alt="Logo预览">
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="logoFileName">未选择文件</div>
+                                        <div class="file-preview-size">
+                                            <span class="upload-type-badge image">图片</span>
+                                            <span id="logoFileSize"></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" onclick="removeLogo()">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>背景图片（可选）</label>
+                    
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" id="bgUploadArea" onclick="document.getElementById('background').click()">
+                            <input type="file" id="background" name="background" accept="image/*">
+                            <div class="upload-icon">🖼️</div>
+                            <div class="upload-text">上传背景图片</div>
+                            <div class="upload-hint">二维码将叠加在背景图上</div>
+                        </div>
+                        
+                        <div id="bgPreview" style="display: none;">
+                            <div class="file-upload-area has-file">
+                                <div class="file-preview">
+                                    <div class="file-preview-thumbnail">
+                                        <img id="bgThumbnail" src="" alt="背景预览">
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="bgFileName">未选择文件</div>
+                                        <div class="file-preview-size">
+                                            <span class="upload-type-badge image">图片</span>
+                                            <span id="bgFileSize"></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" onclick="removeBackground()">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>纠错级别</label>
+                    <div class="select-wrapper">
+                        <select id="error_correction" name="error_correction">
+                            <option value="L">低 (7%)</option>
+                            <option value="M">中 (15%)</option>
+                            <option value="Q">较高 (25%)</option>
+                            <option value="H" selected>高 (30%) - 推荐</option>
+                        </select>
+                    </div>
+                    <p style="font-size: 12px; color: #888; margin-top: 8px;">
+                        纠错级别越高，二维码越容易被识别，但会更复杂
+                    </p>
+                </div>
+                
+                <div class="submit-section">
+                    <button type="submit" class="btn btn-primary btn-lg">生成记忆二维码</button>
+                    <button type="button" class="btn btn-secondary btn-lg" onclick="window.history.back()">取消</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="preview-section">
+            <div class="preview-card">
+                <h2 class="section-title" style="margin-top: 0;">实时预览</h2>
+                
+                <div class="preview-qr-container">
+                    <div id="previewPlaceholder" class="preview-placeholder">
+                        <span class="icon">📱</span>
+                        <span>调整设置后预览</span>
+                    </div>
+                    <img id="previewImage" style="display: none;" alt="QR Preview">
+                </div>
+                
+                <p class="preview-info">
+                    实时预览仅展示颜色效果<br>
+                    Logo 和背景图需生成后查看
+                </p>
+                
+                <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 16px;" onclick="updatePreview()">
+                    🔄 刷新预览
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+function showFlashMessage(message, type) {
+    let alertClass = 'alert-info';
+    if (type === 'error') alertClass = 'alert-danger';
+    else if (type === 'success') alertClass = 'alert-success';
+    else if (type === 'warning') alertClass = 'alert-warning';
+    
+    const existingFlash = document.querySelector('.flash-message-container');
+    if (existingFlash) {
+        existingFlash.remove();
+    }
+    
+    const flashContainer = document.createElement('div');
+    flashContainer.className = 'flash-message-container';
+    flashContainer.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999;';
+    flashContainer.innerHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+        </div>
+    `;
+    document.body.appendChild(flashContainer);
+    
+    setTimeout(() => {
+        if (flashContainer.parentElement) {
+            flashContainer.remove();
+        }
+    }, 5000);
+}
+
+function generateRandomId() {
+    return 'PREVIEW_' + Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
+function getFileExtension(filename) {
+    return filename.split('.').pop().toLowerCase();
+}
+
+function isImageFile(filename) {
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    return imageExts.includes(getFileExtension(filename));
+}
+
+function isVideoFile(filename) {
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'wmv'];
+    return videoExts.includes(getFileExtension(filename));
+}
+
+let selectedLogoFile = null;
+let selectedBackgroundFile = null;
+
+function setupFileUpload(inputId, uploadAreaId, previewId, thumbnailId, fileNameId, fileSizeId, typeBadgeId, isMedia, fileType) {
+    const input = document.getElementById(inputId);
+    const uploadArea = document.getElementById(uploadAreaId);
+    const preview = document.getElementById(previewId);
+    const thumbnail = document.getElementById(thumbnailId);
+    const fileName = document.getElementById(fileNameId);
+    const fileSize = document.getElementById(fileSizeId);
+    const typeBadge = typeBadgeId ? document.getElementById(typeBadgeId) : null;
+    
+    input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > MAX_FILE_SIZE) {
+            showFlashMessage('文件太大！最大支持 50MB，当前文件大小: ' + formatFileSize(file.size), 'error');
+            input.value = '';
+            return;
+        }
+        
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        if (fileType === 'logo') {
+            selectedLogoFile = file;
+        } else if (fileType === 'background') {
+            selectedBackgroundFile = file;
+        }
+        
+        if (typeBadge) {
+            if (isImageFile(file.name)) {
+                typeBadge.textContent = '图片';
+                typeBadge.className = 'upload-type-badge image';
+            } else if (isVideoFile(file.name)) {
+                typeBadge.textContent = '视频';
+                typeBadge.className = 'upload-type-badge video';
+            }
+        }
+        
+        if (isImageFile(file.name) && thumbnail) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                thumbnail.src = event.target.result;
+                thumbnail.style.display = 'block';
+                if (document.getElementById('mediaIcon')) {
+                    document.getElementById('mediaIcon').style.display = 'none';
+                }
+                
+                if (fileType === 'logo' || fileType === 'background') {
+                    debouncedUpdatePreview();
+                }
+            };
+            reader.readAsDataURL(file);
+        } else if (thumbnail) {
+            thumbnail.style.display = 'none';
+            if (document.getElementById('mediaIcon')) {
+                document.getElementById('mediaIcon').style.display = 'block';
+                document.getElementById('mediaIcon').textContent = isVideoFile(file.name) ? '🎬' : '📁';
+            }
+        }
+        
+        uploadArea.style.display = 'none';
+        preview.style.display = 'block';
+    });
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+function removeMedia() {
+    const input = document.getElementById('media');
+    const uploadArea = document.getElementById('mediaUploadArea');
+    const preview = document.getElementById('mediaPreview');
+    const thumbnail = document.getElementById('mediaThumbnail');
+    const icon = document.getElementById('mediaIcon');
+    
+    input.value = '';
+    thumbnail.src = '';
+    thumbnail.style.display = 'none';
+    icon.style.display = 'block';
+    
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+}
+
+function removeLogo() {
+    const input = document.getElementById('logo');
+    const uploadArea = document.getElementById('logoUploadArea');
+    const preview = document.getElementById('logoPreview');
+    
+    input.value = '';
+    selectedLogoFile = null;
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+    
+    debouncedUpdatePreview();
+}
+
+function removeBackground() {
+    const input = document.getElementById('background');
+    const uploadArea = document.getElementById('bgUploadArea');
+    const preview = document.getElementById('bgPreview');
+    
+    input.value = '';
+    selectedBackgroundFile = null;
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+    
+    debouncedUpdatePreview();
+}
+
+setupFileUpload('media', 'mediaUploadArea', 'mediaPreview', 'mediaThumbnail', 'mediaFileName', 'mediaFileSize', 'mediaTypeBadge', true, 'media');
+setupFileUpload('logo', 'logoUploadArea', 'logoPreview', 'logoThumbnail', 'logoFileName', 'logoFileSize', null, false, 'logo');
+setupFileUpload('background', 'bgUploadArea', 'bgPreview', 'bgThumbnail', 'bgFileName', 'bgFileSize', null, false, 'background');
+
+document.getElementById('fg_color').addEventListener('input', function(e) {
+    document.getElementById('fg_color_text').value = e.target.value;
+    debouncedUpdatePreview();
+});
+
+document.getElementById('fg_color_text').addEventListener('input', function(e) {
+    let value = e.target.value;
+    if (!value.startsWith('#')) {
+        value = '#' + value;
+    }
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+        document.getElementById('fg_color').value = value;
+        debouncedUpdatePreview();
+    }
+});
+
+document.getElementById('bg_color').addEventListener('input', function(e) {
+    document.getElementById('bg_color_text').value = e.target.value;
+    debouncedUpdatePreview();
+});
+
+document.getElementById('bg_color_text').addEventListener('input', function(e) {
+    let value = e.target.value;
+    if (!value.startsWith('#')) {
+        value = '#' + value;
+    }
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+        document.getElementById('bg_color').value = value;
+        debouncedUpdatePreview();
+    }
+});
+
+document.getElementById('error_correction').addEventListener('change', debouncedUpdatePreview);
+
+let previewTimeout;
+function debouncedUpdatePreview() {
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(updatePreview, 300);
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+let isUpdating = false;
+async function updatePreview() {
+    if (isUpdating) return;
+    isUpdating = true;
+    
+    const fgColor = document.getElementById('fg_color').value;
+    const bgColor = document.getElementById('bg_color').value;
+    const errorCorrection = document.getElementById('error_correction').value;
+    const randomMemoryId = generateRandomId();
+    
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const previewImg = document.getElementById('previewImage');
+    
+    if (!previewPlaceholder || !previewImg) {
+        console.error('预览元素不存在');
+        isUpdating = false;
+        return;
+    }
+    
+    const requestBody = {
+        memory_id: randomMemoryId,
+        fg_color: fgColor,
+        bg_color: bgColor,
+        error_correction: errorCorrection
+    };
+    
+    if (selectedLogoFile) {
+        try {
+            requestBody.logo_base64 = await fileToBase64(selectedLogoFile);
+        } catch (e) {
+            console.error('Logo 转 base64 失败:', e);
+        }
+    }
+    
+    if (selectedBackgroundFile) {
+        try {
+            requestBody.background_base64 = await fileToBase64(selectedBackgroundFile);
+        } catch (e) {
+            console.error('背景图转 base64 失败:', e);
+        }
+    }
+    
+    try {
+        const response = await fetch('/api/preview_qr', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            throw new Error('服务器响应错误: ' + response.status);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const timestamp = new Date().getTime();
+            const newSrc = data.qr_url + (data.qr_url.includes('?') ? '&' : '?') + 't=' + timestamp;
+            
+            previewImg.onload = function() {
+                previewPlaceholder.style.display = 'none';
+                previewImg.style.display = 'block';
+                isUpdating = false;
+            };
+            
+            previewImg.onerror = function() {
+                console.error('图片加载失败');
+                isUpdating = false;
+            };
+            
+            previewImg.src = newSrc;
+        } else {
+            console.error('预览生成失败:', data.error);
+            isUpdating = false;
+        }
+    } catch (error) {
+        console.error('预览更新失败:', error);
+        isUpdating = false;
+    }
+}
+
+function ensurePreviewLoaded() {
+    const previewImg = document.getElementById('previewImage');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    
+    if (previewImg && previewPlaceholder) {
+        if (previewImg.style.display === 'none' || !previewImg.src) {
+            updatePreview();
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(updatePreview, 100);
+    setTimeout(ensurePreviewLoaded, 500);
+    setTimeout(ensurePreviewLoaded, 1000);
+});
+
+window.addEventListener('load', function() {
+    ensurePreviewLoaded();
+});
+</script>
+{% endblock %}

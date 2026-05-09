@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Memory QR - 记忆二维码{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <span class="qr-icon">📱</span>
+                <span class="brand-text">Memory QR</span>
+            </a>
+            
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('index') }}" class="nav-link">首页</a>
+                <a href="{{ url_for('decode_qr') }}" class="nav-link">解码</a>
+                <a href="{{ url_for('shop') }}" class="nav-link">商城</a>
+                <a href="{{ url_for('concepts') }}" class="nav-link">概念</a>
+                
+                {% if session.get('user_id') %}
+                    <div class="nav-dropdown">
+                        <button class="nav-user-btn">
+                            <span class="user-avatar">{{ session.get('username', '用户')[0].upper() }}</span>
+                            <span class="user-name">{{ session.get('username', '用户') }}</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('profile') }}" class="dropdown-item">👤 个人中心</a>
+                            <a href="{{ url_for('dashboard') }}" class="dropdown-item">📁 我的记忆</a>
+                            <a href="{{ url_for('create_memory') }}" class="dropdown-item">✨ 创建记忆</a>
+                            <hr class="dropdown-divider">
+                            <a href="{{ url_for('logout') }}" class="dropdown-item logout">🚪 退出登录</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="nav-auth">
+                        <a href="{{ url_for('login') }}" class="nav-link">登录</a>
+                        <a href="{{ url_for('register') }}" class="nav-btn-primary">注册</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            <span class="flash-icon">
+                                {% if category == 'success' %}✓
+                                {% elif category == 'danger' %}✕
+                                {% elif category == 'warning' %}⚠
+                                {% elif category == 'info' %}ℹ
+                                {% else %}ℹ{% endif %}
+                            </span>
+                            <span class="flash-text">{{ message }}</span>
+                            <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Memory QR</h3>
+                <p>将二维码打造为通往私密记忆的"加密钥匙"</p>
+            </div>
+            <div class="footer-section">
+                <h4>快速链接</h4>
+                <a href="{{ url_for('index') }}">首页</a>
+                <a href="{{ url_for('decode_qr') }}">解码</a>
+                <a href="{{ url_for('shop') }}">商城</a>
+            </div>
+            <div class="footer-section">
+                <h4>关于</h4>
+                <a href="{{ url_for('concepts') }}">概念</a>
+                <p>© 2024 Memory QR. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
