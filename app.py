@@ -4,6 +4,8 @@ from werkzeug.utils import secure_filename
 import sqlite3
 import os
 import uuid
+import base64
+import io
 import qrcode
 from qrcode.image.pil import PilImage
 from PIL import Image, ImageDraw
@@ -19,8 +21,8 @@ app.secret_key = 'memory_qr_secret_key_2024'
 UPLOAD_FOLDER = 'uploads'
 QR_FOLDER = 'uploads/qrcodes'
 MEMORY_FOLDER = 'uploads/memories'
-ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'wmv'}
 ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS.union(ALLOWED_VIDEO_EXTENSIONS)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -198,6 +200,17 @@ def hex_to_rgb(hex_color):
     if len(hex_color) == 3:
         hex_color = ''.join(c * 2 for c in hex_color)
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def base64_to_image(base64_string):
+    try:
+        if ',' in base64_string:
+            base64_string = base64_string.split(',')[1]
+        image_data = base64.b64decode(base64_string)
+        image = Image.open(io.BytesIO(image_data))
+        return image
+    except Exception as e:
+        print(f"Base64 解码失败: {e}")
+        return None
 
 def decode_qr_code(image_path):
     # 使用 OpenCV 解码二维码
@@ -637,11 +650,85 @@ def preview_qr():
             'error_correction': data.get('error_correction', 'H')
         }
         
-        # 生成预览二维码
-        qr = segno.make(memory_id, error=options['error_correction'])
+        fg_color = options['fg_color']
+        bg_color = options['bg_color']
+        error_correction = options['error_correction']
+        
+        qr = segno.make(memory_id, error=error_correction)
+        temp_qr_path = os.path.join(QR_FOLDER, f'temp_{uuid.uuid4().hex}.png')
+        qr.save(temp_qr_path, scale=8, border=3, dark=fg_color, light=bg_color)
+        
+        qr_img = Image.open(temp_qr_path).convert('RGB')
+        qr_width, qr_height = qr_img.size
+        
+        background_img = None
+        logo_img = None
+        
+        if 'background_base64' in data and data['background_base64']:
+            background_img = base64_to_image(data['background_base64'])
+        
+        if 'logo_base64' in data and data['logo_base64']:
+            logo_img = base64_to_image(data['logo_base64'])
+        
+        if background_img:
+            try:
+                bg_img = background_img.convert('RGB')
+                bg_img = bg_img.resize((qr_width, qr_height), Image.Resampling.LANCZOS)
+                
+                qr_data = qr_img.load()
+                bg_data = bg_img.load()
+                
+                for y in range(qr_height):
+                    for x in range(qr_width):
+                        qr_r, qr_g, qr_b = qr_data[x, y]
+                        bg_r, bg_g, bg_b = bg_data[x, y]
+                        
+                        is_foreground = (qr_r, qr_g, qr_b) == hex_to_rgb(fg_color)
+                        
+                        if is_foreground:
+                            qr_data[x, y] = (qr_r, qr_g, qr_b)
+                        else:
+                            alpha = 0.7
+                            qr_data[x, y] = (
+                                int(bg_r * alpha + qr_r * (1 - alpha)),
+                                int(bg_g * alpha + qr_g * (1 - alpha)),
+                                int(bg_b * alpha + qr_b * (1 - alpha))
+                            )
+            except Exception as e:
+                print(f"预览背景图处理错误: {e}")
+        
+        if logo_img:
+            try:
+                logo = logo_img.convert('RGBA')
+                logo_size = int(qr_width * 0.15)
+                logo = logo.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+                
+                logo_x = (qr_width - logo_size) // 2
+                logo_y = (qr_height - logo_size) // 2
+                
+                white_bg = Image.new('RGB', (logo_size + 10, logo_size + 10), hex_to_rgb(bg_color) if bg_color else (255, 255, 255))
+                white_bg_x = logo_x - 5
+                white_bg_y = logo_y - 5
+                
+                qr_img.paste(white_bg, (white_bg_x, white_bg_y))
+                
+                logo_rgb = logo.convert('RGB')
+                logo_alpha = logo.split()[-1] if 'A' in logo.getbands() else None
+                
+                if logo_alpha:
+                    qr_img.paste(logo_rgb, (logo_x, logo_y), logo_alpha)
+                else:
+                    qr_img.paste(logo_rgb, (logo_x, logo_y))
+            except Exception as e:
+                print(f"预览 Logo 处理错误: {e}")
+        
         preview_filename = f'preview_{uuid.uuid4().hex}.png'
         preview_path = os.path.join(QR_FOLDER, preview_filename)
-        qr.save(preview_path, scale=5, border=2, dark=options['fg_color'], light=options['bg_color'])
+        
+        qr_img.save(preview_path, 'PNG')
+        
+        if os.path.exists(temp_qr_path):
+            os.remove(temp_qr_path)
         
         return jsonify({
             'success': True,

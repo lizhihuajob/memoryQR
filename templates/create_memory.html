@@ -394,7 +394,7 @@
                             <input type="file" id="media" name="media" accept="image/*,video/*">
                             <div class="upload-icon">📁</div>
                             <div class="upload-text">点击或拖拽上传图片或视频</div>
-                            <div class="upload-hint">支持 JPG, PNG, GIF, MP4, WebM 等格式</div>
+                            <div class="upload-hint">支持 JPG, PNG, GIF, MP4, WebM, MOV 等格式，单文件最大 50MB</div>
                         </div>
                         
                         <div id="mediaPreview" style="display: none;">
@@ -557,6 +557,41 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+function showFlashMessage(message, type) {
+    let alertClass = 'alert-info';
+    if (type === 'error') alertClass = 'alert-danger';
+    else if (type === 'success') alertClass = 'alert-success';
+    else if (type === 'warning') alertClass = 'alert-warning';
+    
+    const existingFlash = document.querySelector('.flash-message-container');
+    if (existingFlash) {
+        existingFlash.remove();
+    }
+    
+    const flashContainer = document.createElement('div');
+    flashContainer.className = 'flash-message-container';
+    flashContainer.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999;';
+    flashContainer.innerHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+        </div>
+    `;
+    document.body.appendChild(flashContainer);
+    
+    setTimeout(() => {
+        if (flashContainer.parentElement) {
+            flashContainer.remove();
+        }
+    }, 5000);
+}
+
+function generateRandomId() {
+    return 'PREVIEW_' + Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
 function getFileExtension(filename) {
     return filename.split('.').pop().toLowerCase();
 }
@@ -567,11 +602,14 @@ function isImageFile(filename) {
 }
 
 function isVideoFile(filename) {
-    const videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'wmv'];
     return videoExts.includes(getFileExtension(filename));
 }
 
-function setupFileUpload(inputId, uploadAreaId, previewId, thumbnailId, fileNameId, fileSizeId, typeBadgeId, isMedia) {
+let selectedLogoFile = null;
+let selectedBackgroundFile = null;
+
+function setupFileUpload(inputId, uploadAreaId, previewId, thumbnailId, fileNameId, fileSizeId, typeBadgeId, isMedia, fileType) {
     const input = document.getElementById(inputId);
     const uploadArea = document.getElementById(uploadAreaId);
     const preview = document.getElementById(previewId);
@@ -584,8 +622,20 @@ function setupFileUpload(inputId, uploadAreaId, previewId, thumbnailId, fileName
         const file = e.target.files[0];
         if (!file) return;
         
+        if (file.size > MAX_FILE_SIZE) {
+            showFlashMessage('文件太大！最大支持 50MB，当前文件大小: ' + formatFileSize(file.size), 'error');
+            input.value = '';
+            return;
+        }
+        
         fileName.textContent = file.name;
         fileSize.textContent = formatFileSize(file.size);
+        
+        if (fileType === 'logo') {
+            selectedLogoFile = file;
+        } else if (fileType === 'background') {
+            selectedBackgroundFile = file;
+        }
         
         if (typeBadge) {
             if (isImageFile(file.name)) {
@@ -604,6 +654,10 @@ function setupFileUpload(inputId, uploadAreaId, previewId, thumbnailId, fileName
                 thumbnail.style.display = 'block';
                 if (document.getElementById('mediaIcon')) {
                     document.getElementById('mediaIcon').style.display = 'none';
+                }
+                
+                if (fileType === 'logo' || fileType === 'background') {
+                    debouncedUpdatePreview();
                 }
             };
             reader.readAsDataURL(file);
@@ -661,8 +715,11 @@ function removeLogo() {
     const preview = document.getElementById('logoPreview');
     
     input.value = '';
+    selectedLogoFile = null;
     preview.style.display = 'none';
     uploadArea.style.display = 'block';
+    
+    debouncedUpdatePreview();
 }
 
 function removeBackground() {
@@ -671,13 +728,16 @@ function removeBackground() {
     const preview = document.getElementById('bgPreview');
     
     input.value = '';
+    selectedBackgroundFile = null;
     preview.style.display = 'none';
     uploadArea.style.display = 'block';
+    
+    debouncedUpdatePreview();
 }
 
-setupFileUpload('media', 'mediaUploadArea', 'mediaPreview', 'mediaThumbnail', 'mediaFileName', 'mediaFileSize', 'mediaTypeBadge', true);
-setupFileUpload('logo', 'logoUploadArea', 'logoPreview', 'logoThumbnail', 'logoFileName', 'logoFileSize', null, false);
-setupFileUpload('background', 'bgUploadArea', 'bgPreview', 'bgThumbnail', 'bgFileName', 'bgFileSize', null, false);
+setupFileUpload('media', 'mediaUploadArea', 'mediaPreview', 'mediaThumbnail', 'mediaFileName', 'mediaFileSize', 'mediaTypeBadge', true, 'media');
+setupFileUpload('logo', 'logoUploadArea', 'logoPreview', 'logoThumbnail', 'logoFileName', 'logoFileSize', null, false, 'logo');
+setupFileUpload('background', 'bgUploadArea', 'bgPreview', 'bgThumbnail', 'bgFileName', 'bgFileSize', null, false, 'background');
 
 document.getElementById('fg_color').addEventListener('input', function(e) {
     document.getElementById('fg_color_text').value = e.target.value;
@@ -719,10 +779,56 @@ function debouncedUpdatePreview() {
     previewTimeout = setTimeout(updatePreview, 300);
 }
 
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+let isUpdating = false;
 async function updatePreview() {
+    if (isUpdating) return;
+    isUpdating = true;
+    
     const fgColor = document.getElementById('fg_color').value;
     const bgColor = document.getElementById('bg_color').value;
     const errorCorrection = document.getElementById('error_correction').value;
+    const randomMemoryId = generateRandomId();
+    
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const previewImg = document.getElementById('previewImage');
+    
+    if (!previewPlaceholder || !previewImg) {
+        console.error('预览元素不存在');
+        isUpdating = false;
+        return;
+    }
+    
+    const requestBody = {
+        memory_id: randomMemoryId,
+        fg_color: fgColor,
+        bg_color: bgColor,
+        error_correction: errorCorrection
+    };
+    
+    if (selectedLogoFile) {
+        try {
+            requestBody.logo_base64 = await fileToBase64(selectedLogoFile);
+        } catch (e) {
+            console.error('Logo 转 base64 失败:', e);
+        }
+    }
+    
+    if (selectedBackgroundFile) {
+        try {
+            requestBody.background_base64 = await fileToBase64(selectedBackgroundFile);
+        } catch (e) {
+            console.error('背景图转 base64 失败:', e);
+        }
+    }
     
     try {
         const response = await fetch('/api/preview_qr', {
@@ -730,27 +836,60 @@ async function updatePreview() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                memory_id: 'PREVIEW',
-                fg_color: fgColor,
-                bg_color: bgColor,
-                error_correction: errorCorrection
-            })
+            body: JSON.stringify(requestBody)
         });
+        
+        if (!response.ok) {
+            throw new Error('服务器响应错误: ' + response.status);
+        }
         
         const data = await response.json();
         
         if (data.success) {
-            document.getElementById('previewPlaceholder').style.display = 'none';
-            const previewImg = document.getElementById('previewImage');
-            previewImg.src = data.qr_url;
-            previewImg.style.display = 'block';
+            const timestamp = new Date().getTime();
+            const newSrc = data.qr_url + (data.qr_url.includes('?') ? '&' : '?') + 't=' + timestamp;
+            
+            previewImg.onload = function() {
+                previewPlaceholder.style.display = 'none';
+                previewImg.style.display = 'block';
+                isUpdating = false;
+            };
+            
+            previewImg.onerror = function() {
+                console.error('图片加载失败');
+                isUpdating = false;
+            };
+            
+            previewImg.src = newSrc;
+        } else {
+            console.error('预览生成失败:', data.error);
+            isUpdating = false;
         }
     } catch (error) {
         console.error('预览更新失败:', error);
+        isUpdating = false;
     }
 }
 
-updatePreview();
+function ensurePreviewLoaded() {
+    const previewImg = document.getElementById('previewImage');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    
+    if (previewImg && previewPlaceholder) {
+        if (previewImg.style.display === 'none' || !previewImg.src) {
+            updatePreview();
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(updatePreview, 100);
+    setTimeout(ensurePreviewLoaded, 500);
+    setTimeout(ensurePreviewLoaded, 1000);
+});
+
+window.addEventListener('load', function() {
+    ensurePreviewLoaded();
+});
 </script>
 {% endblock %}
